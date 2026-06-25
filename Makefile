@@ -4,7 +4,7 @@ CXXFLAGS := -std=c++20 -Wall -Wextra -Wpedantic -g
 LDFLAGS  := -pthread
 
 # Target executable name
-TARGET   := network_app
+TARGET   := main 
 
 # Find all .cpp files in the current directory
 SRCS     := main.cpp NetworkListener.cpp
