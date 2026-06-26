@@ -1,22 +1,17 @@
 #include "p2p/net/listener.hpp"
+#include "p2p/net/scopedsocket.hpp"
 
-#include <asm-generic/socket.h>
 #include <cstring>
-#include <iostream>
 #include <arpa/inet.h>
-#include <memory>
-#include <stdexcept>
-#include <string_view>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <netdb.h>
-#include <string>
-#include <thread>
 #include <optional>
 #include <unistd.h>
-#include <vector>
 #include <cerrno>
+#include <iostream>
+
 
 
 
@@ -24,58 +19,17 @@
 #define BACKLOG 10
 #define PACKET_SIZE 1024
 
+int Listener::handle_client(ScopedSocket socket) {
+    (void)socket;
+    return 0;
+};
 
-void AddrInfoDeleter::operator()(struct addrinfo* res) const {
-    if (res) {
-        ::freeaddrinfo(res);
-    }
-}
+void Listener::start_listening() {
 
+    ::addrinfo hints;
+    ::addrinfo* p;
 
-ScopedSocket::ScopedSocket(ScopedSocket&& other) noexcept : m_fd(other.m_fd) {
-    other.m_fd = -1;
-}
-
-ScopedSocket& ScopedSocket::operator=(ScopedSocket&& other) noexcept {
-    if (this != &other) {
-        if (m_fd != -1) {
-            ::close(m_fd);
-        }
-        m_fd = other.m_fd;
-        other.m_fd = -1;
-    }
-
-    return *this;
-}
-
-
-ScopedSocket::ScopedSocket(int fd) : m_fd(fd) {
-    if (m_fd == -1) {
-        std::cerr << "invalid socket descripor, dont use\n";
-    } 
-}
-
-ScopedSocket::~ScopedSocket() {
-    if (m_fd != -1) {
-        ::close(m_fd);
-    }
-}
-
-int ScopedSocket::get() const {
-    return m_fd;
-}
-
-bool ScopedSocket::is_valid() const {
-    return m_fd != -1;
-}
-
-
-void NetworkListener::start_listening() {
-
-    struct addrinfo hints;
-    struct addrinfo* p;
-
-    struct addrinfo* raw_servinfo = nullptr;
+    ::addrinfo* raw_servinfo = nullptr;
 
     int sockfd;
     int yes = 1;
@@ -146,36 +100,5 @@ void NetworkListener::start_listening() {
         this->m_workers.emplace_back([this, move_socket = std::move(client_socket)]() mutable {
             this->handle_client(std::move(move_socket));
         });
-
-
     }
-}
-
-int NetworkListener::handle_client(ScopedSocket socket) {
-    while (true) {
-        std::string message;
-        message.resize(PACKET_SIZE);
-
-
-        int bytes = ::recv(socket.get(), &message[0], PACKET_SIZE-1, 0);
-        if (bytes == 0) {
-            std::cout << "good exit\n";
-            break;
-        }
-
-        if (bytes == -1) {
-            std::cout << "bad exit\n";
-            break;
-        }
-
-        message.resize(bytes);
-        std::cout << "DEBUG DEBUG DEBUG: " << message << "\n";
-
-    }
-
-    return 0;
-
-}
-
-
-
+};

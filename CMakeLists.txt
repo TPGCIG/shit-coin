@@ -24,12 +24,18 @@ find_package(Threads REQUIRED)
 set(PROJECT_SOURCES
     src/main.cpp
     src/p2p/net/listener.cpp
+    src/p2p/net/dispatcher.cpp
+    src/p2p/net/scopedsocket.cpp
+    src/p2p/net/node.cpp
     src/p2p/peers.cpp
 )
 
 add_executable(p2p_client
     src/main.cpp
     src/p2p/net/listener.cpp
+    src/p2p/net/dispatcher.cpp
+    src/p2p/net/scopedsocket.cpp
+    src/p2p/net/node.cpp
     src/p2p/peers.cpp
 )
 
