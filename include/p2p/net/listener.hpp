@@ -1,8 +1,11 @@
 #pragma once
 
 
+#include <fstream>
 #include <vector>
 #include <thread>
+#include <string_view>
+#include <unordered_set>
 
 struct addrinfo;
 
@@ -43,6 +46,14 @@ public:
 
 };
 
+class PeerList {
+private:
+    std::filebuf clientFD;
+    std::unordered_set<std::string_view> clients;
+
+public:
+    int add_peer(std::string_view);
+};
 
 
 

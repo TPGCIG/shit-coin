@@ -1,4 +1,4 @@
-#include "NetworkListener.h"
+#include "p2p/net/listener.hpp"
 
 #include <asm-generic/socket.h>
 #include <cstring>
@@ -51,7 +51,7 @@ ScopedSocket& ScopedSocket::operator=(ScopedSocket&& other) noexcept {
 
 ScopedSocket::ScopedSocket(int fd) : m_fd(fd) {
     if (m_fd == -1) {
-        std::cerr << "Warning: Invalid socket descripor.\n";
+        std::cerr << "invalid socket descripor, dont use\n";
     } 
 }
 
@@ -88,7 +88,7 @@ void NetworkListener::start_listening() {
     hints.ai_flags = AI_PASSIVE;
 
     if (::getaddrinfo("localhost", INPUT_PORT, &hints, &raw_servinfo) != 0) {
-        throw std::runtime_error("GAI Failed");
+        throw std::runtime_error("GAI failed");
     }
 
     SafeAddrInfo servinfo(raw_servinfo);
@@ -105,7 +105,7 @@ void NetworkListener::start_listening() {
 
         if (setsockopt(ssockfd->get(), SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1) {
             std::cerr << "setsockopt failed\n";
-            throw std::runtime_error("Failed to bind port");
+            throw std::runtime_error("failed to bind port");
         }
 
         if (bind(ssockfd->get(), p->ai_addr, p->ai_addrlen) == -1) {
@@ -118,11 +118,11 @@ void NetworkListener::start_listening() {
 
 
     if (p == nullptr) {
-        throw std::runtime_error("Server: failed to bind"); 
+        throw std::runtime_error("server: failed to bind"); 
     }
 
     if (::listen(ssockfd->get(), BACKLOG) == -1) {
-        throw std::runtime_error("Listen failed");
+        throw std::runtime_error("listenn failed");
     }
 
     std::cout << "listening for connection" << std::endl;
@@ -133,14 +133,16 @@ void NetworkListener::start_listening() {
         int client_fd = ::accept(ssockfd->get(), (struct sockaddr *)&their_addr, &addr_size);
     
         if (client_fd == -1) {
-            std::cerr << "Failed to accept connection\n";
+            std::cerr << "failed to accept connection\n";
             continue;
         }
 
         ScopedSocket client_socket(client_fd);
 
-        std::cout << "Connection made with client " << client_socket.get() << "\n";
+        std::cout << "connection made with " << client_socket.get() << "\n";
 
+
+        // new thread to handle connection
         this->m_workers.emplace_back([this, move_socket = std::move(client_socket)]() mutable {
             this->handle_client(std::move(move_socket));
         });
@@ -157,17 +159,17 @@ int NetworkListener::handle_client(ScopedSocket socket) {
 
         int bytes = ::recv(socket.get(), &message[0], PACKET_SIZE-1, 0);
         if (bytes == 0) {
-            std::cout << "Graceful exit\n";
+            std::cout << "good exit\n";
             break;
         }
 
         if (bytes == -1) {
-            std::cout << "Bad exit on socket\n";
+            std::cout << "bad exit\n";
             break;
         }
 
         message.resize(bytes);
-        std::cout << "Incoming: " << message << "\n";
+        std::cout << "DEBUG DEBUG DEBUG: " << message << "\n";
 
     }
 
