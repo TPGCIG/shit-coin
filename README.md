@@ -1,7 +1,7 @@
 the moon is a lie.
 
 built for learning computer networking. resources I used:
-- Beej's guide to computer networking
+- Beej's guide to network programming
 - learncpp.com
 - tcp/ip illustrated vol 1.
 
