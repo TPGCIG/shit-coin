@@ -4,30 +4,24 @@
 #include "p2p/net/scopedsocket.hpp"
 #include "p2p/peers.hpp"
 #include <cstdint>
-#include <vector>
 #include <thread>
-
+#include <vector>
 
 void *get_in_addr(sockaddr *);
 
 // will change just dumb packet for testing
 struct __attribute__((packed)) Packet {
     uint8_t nature;
-    uint64_t payload;
+    uint16_t payload_len;
+    char payload[128];
 };
 
 // now we play the client
 
 class Dispatcher {
-private:
+  private:
     std::vector<std::jthread> m_workers;
-public:
+
+  public:
     int connect_to_peer(Peer);
-
-
-
-
 };
-
-
-

@@ -1,35 +1,33 @@
 #include "p2p/net/listener.hpp"
+#include "p2p/net/dispatcher.hpp"
 #include "p2p/net/scopedsocket.hpp"
 
-#include <cstring>
 #include <arpa/inet.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <sys/types.h>
-#include <netdb.h>
-#include <optional>
-#include <unistd.h>
 #include <cerrno>
+#include <cstring>
 #include <iostream>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <optional>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
 
+void Listener::handle_client(ScopedSocket socket) {
+    Packet pkt;
 
+    int numbytes = recv(socket.get(), &pkt, sizeof pkt, 0);
 
-
-#define INPUT_PORT "9876"
-#define BACKLOG 10
-#define PACKET_SIZE 1024
-
-int Listener::handle_client(ScopedSocket socket) {
-    (void)socket;
-    return 0;
+    if (numbytes == -1) {
+        throw std::runtime_error("bad numbytes -1!!!");
+    }
 };
 
 void Listener::start_listening() {
-
     ::addrinfo hints;
-    ::addrinfo* p;
+    ::addrinfo *p;
 
-    ::addrinfo* raw_servinfo = nullptr;
+    ::addrinfo *raw_servinfo = nullptr;
 
     int sockfd;
     int yes = 1;
@@ -56,8 +54,8 @@ void Listener::start_listening() {
             continue;
         }
 
-
-        if (setsockopt(ssockfd->get(), SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1) {
+        if (setsockopt(ssockfd->get(), SOL_SOCKET, SO_REUSEADDR, &yes,
+                       sizeof yes) == -1) {
             std::cerr << "setsockopt failed\n";
             throw std::runtime_error("failed to bind port");
         }
@@ -70,9 +68,8 @@ void Listener::start_listening() {
         break;
     }
 
-
     if (p == nullptr) {
-        throw std::runtime_error("server: failed to bind"); 
+        throw std::runtime_error("server: failed to bind");
     }
 
     if (::listen(ssockfd->get(), BACKLOG) == -1) {
@@ -81,11 +78,12 @@ void Listener::start_listening() {
 
     std::cout << "listening for connection" << std::endl;
 
-    while(true) {
+    while (true) {
         struct sockaddr_storage their_addr;
         socklen_t addr_size = sizeof(their_addr);
-        int client_fd = ::accept(ssockfd->get(), (struct sockaddr *)&their_addr, &addr_size);
-    
+        int client_fd = ::accept(ssockfd->get(), (struct sockaddr *)&their_addr,
+                                 &addr_size);
+
         if (client_fd == -1) {
             std::cerr << "failed to accept connection\n";
             continue;
@@ -95,10 +93,11 @@ void Listener::start_listening() {
 
         std::cout << "connection made with " << client_socket.get() << "\n";
 
-
         // new thread to handle connection
-        this->m_workers.emplace_back([this, move_socket = std::move(client_socket)]() mutable {
-            this->handle_client(std::move(move_socket));
-        });
+        this->m_workers.emplace_back(
+            [this, move_socket = std::move(client_socket)]() mutable {
+                this->handle_client(std::move(move_socket));
+            });
+        this->m_workers.back().detach();
     }
 };

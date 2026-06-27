@@ -1,41 +1,35 @@
-#include "p2p/net/node.hpp"
 #include "p2p/net/dispatcher.hpp"
+#include "p2p/net/node.hpp"
 #include "p2p/peers.hpp"
 
+#include <arpa/inet.h>
 #include <asm-generic/socket.h>
+#include <cerrno>
 #include <cstring>
 #include <iostream>
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <sys/types.h>
 #include <netdb.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <unistd.h>
-#include <cerrno>
 
-int main(int argc, char* argv[]) {
-        
+int main(int argc, char *argv[]) {
     (void)argc;
-    (void)argv;
 
+    Listener listener;
     Dispatcher dispatcher;
     PeerList pl;
 
-    int op = pl.retrieve_central_peers();
+    (void)pl.retrieve_central_peers();
+    std::vector peers = pl.get_peers();
 
-    std::cout << op;
-
+    if (std::string(argv[1]) == "l") {
+        listener.start_listening();
+    } else {
+        dispatcher.connect_to_peer(peers[0]);
+    }
 
     std::cout << "end main" << std::endl;
 
-
-
-
-
-
     return 0;
-
-
-
-
 }
