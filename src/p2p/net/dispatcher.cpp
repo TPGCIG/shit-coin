@@ -16,8 +16,10 @@ void *get_in_addr(struct sockaddr *sa) {
 
     return &(((struct sockaddr_in6 *)sa)->sin6_addr);
 }
+// TODO: build this out with a template.
 
-int Dispatcher::connect_to_peer(Peer peer) {
+/*
+int Dispatcher::send_to_peer(Peer peer, Packet pkt) {
     int sockfd, numbytes;
     std::string buf;
     ::addrinfo hints;
@@ -73,17 +75,29 @@ int Dispatcher::connect_to_peer(Peer peer) {
 
     std::cout << "client: connected to " << s << "\n";
 
-    Packet pkt{};
-
-    numbytes =
-        ::send(ssockfd->get(), static_cast<void *>(&pkt), PACKET_SIZE, 0);
+    numbytes = ::send(ssockfd->get(), static_cast<void *>(&pkt), sizeof pkt, 0);
 
     if (numbytes == -1) {
         throw std::runtime_error("bad send");
     }
-
-    std::cout << "fd " << ssockfd->get() << "|| client: SHIPPED " << numbytes
-              << " bytes\n";
-
     return 0;
+}
+*/
+int Dispatcher::request_peers(Peer peer) {
+    /* Requests peers from a provided peer */
+
+    // create the request Packet
+    Packet pkt{};
+
+    pkt.type = PacketType::RequestPeerList;
+
+    // send it
+    return this->send_to_peer(peer, pkt);
+}
+
+int Dispatcher::provide_peers(Peer peer, PeerList peer_list) {
+
+    Packet pkt{};
+
+    pkt.type = PacketType::PeerList;
 }

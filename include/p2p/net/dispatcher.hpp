@@ -1,27 +1,24 @@
 
 #pragma once
 
+#include "p2p/net/packets.hpp"
 #include "p2p/net/scopedsocket.hpp"
 #include "p2p/peers.hpp"
-#include <cstdint>
+
 #include <thread>
 #include <vector>
 
 void *get_in_addr(sockaddr *);
-
-// will change just dumb packet for testing
-struct __attribute__((packed)) Packet {
-    uint8_t nature;
-    uint16_t payload_len;
-    char payload[128];
-};
 
 // now we play the client
 
 class Dispatcher {
   private:
     std::vector<std::jthread> m_workers;
+    // int send_to_peer(Peer, Packet);
+    //  TODO: create template or something to handle various packet types.
 
   public:
-    int connect_to_peer(Peer);
+    int request_peers(Peer);
+    int provide_peers(Peer, PeerList);
 };

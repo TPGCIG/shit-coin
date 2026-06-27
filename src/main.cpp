@@ -16,20 +16,5 @@
 int main(int argc, char *argv[]) {
     (void)argc;
 
-    Listener listener;
-    Dispatcher dispatcher;
-    PeerList pl;
-
-    (void)pl.retrieve_central_peers();
-    std::vector peers = pl.get_peers();
-
-    if (std::string(argv[1]) == "l") {
-        listener.start_listening();
-    } else {
-        dispatcher.connect_to_peer(peers[0]);
-    }
-
-    std::cout << "end main" << std::endl;
-
     return 0;
 }
