@@ -1,5 +1,6 @@
 #include "p2p/net/listener.hpp"
 #include "p2p/net/dispatcher.hpp"
+#include "p2p/net/packets.hpp"
 #include "p2p/net/scopedsocket.hpp"
 
 #include <arpa/inet.h>
@@ -14,12 +15,66 @@
 #include <unistd.h>
 
 void Listener::handle_client(ScopedSocket socket) {
-    Packet pkt;
+    std::vector<std::byte> recv_buffer;
+    PacketHeader pkt_h{};
 
-    int numbytes = recv(socket.get(), &pkt, sizeof pkt, 0);
+    bool header_incoming = true;
+    bool header_received = false;
 
-    if (numbytes == -1) {
-        throw std::runtime_error("bad numbytes -1!!!");
+    std::byte tmp[1024];
+    int n = recv(socket.get(), tmp, sizeof tmp, 0);
+
+    recv_buffer.insert(recv_buffer.end(), tmp, tmp + n);
+
+    // Suck in recv information until we receive a full header, only expect a
+    // non-header if explicitly told to.
+    while (true) {
+
+        if (n <= 0) {
+            std::cout << "listener: connection closed with socket "
+                      << socket.get() << "\n";
+            return;
+        }
+
+        if (header_incoming) {
+            if (recv_buffer.size() >= sizeof(PacketHeader)) {
+                pkt_h = deserialise_header_pkt(recv_buffer.data());
+                header_received = true;
+                std::cout << "header received with: \n"
+                          << "    | type = "
+                          << static_cast<int>(pkt_h.packet_type) << "\n"
+                          << "    | len  = " << pkt_h.length << "\n";
+            }
+
+            break;
+
+        } else { // if we receive a body packet
+            if (!(recv_buffer.size() >= pkt_h.length)) {
+                break;
+            }
+
+            switch (static_cast<PacketType>(pkt_h.packet_type)) {
+            case PacketType::PeerList: {
+                PeerListPacket plp =
+                    deserialise_peer_list_pkt(recv_buffer.data());
+                std::cout << "Received peerlistpacket with count: "
+                          << plp.peer_count << "\n";
+                break;
+            }
+            default:
+                std::cerr << "listener: catastrophic error - packet type: "
+                          << static_cast<int>(pkt_h.packet_type) << "\n";
+                return;
+            }
+
+            header_incoming = true;
+        }
+    }
+
+    if (header_received) {
+        header_incoming =
+            is_bodyless(static_cast<PacketType>(pkt_h.packet_type));
+        header_received = false;
     }
 };
 

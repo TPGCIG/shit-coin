@@ -27,7 +27,8 @@ set(PROJECT_SOURCES
     src/p2p/net/dispatcher.cpp
     src/p2p/net/scopedsocket.cpp
     src/p2p/net/node.cpp
-    src/p2p/peers.cpp
+    src/p2p/net/peers.cpp
+    src/p2p/net/packets.cpp
 )
 
 add_executable(p2p_client
@@ -36,7 +37,8 @@ add_executable(p2p_client
     src/p2p/net/dispatcher.cpp
     src/p2p/net/scopedsocket.cpp
     src/p2p/net/node.cpp
-    src/p2p/peers.cpp
+    src/p2p/net/peers.cpp
+    src/p2p/net/packets.cpp
 )
 
 target_include_directories(p2p_client PUBLIC 
