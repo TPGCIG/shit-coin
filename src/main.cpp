@@ -18,12 +18,17 @@
 
 int main(int argc, char *argv[]) {
     (void)argc;
+    (void)argv;
 
     Dispatcher dp;
     Listener ls;
 
     Peer pr{AddressType::IPv4, LH_A, LH_P};
-
+    Peer pr2{AddressType::IPv6, "hongkong", "1111"};
+    PeerList pl;
+    pl.add_peer(AddressType::IPv4, LH_A, LH_P);
+    pl.add_peer(AddressType::IPv6, "hongkkong", "1111");
+    pl.add_peer(AddressType::IPv6, "china", "1211");
     if (strcmp(argv[1], "l") == 0) {
         ls.start_listening();
     } else {

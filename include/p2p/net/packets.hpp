@@ -7,7 +7,7 @@
 enum class PacketType {
     RequestPeerList,
 
-    PeerList,
+    PeerPacket,
 };
 
 constexpr bool is_bodyless(PacketType type) {
@@ -29,8 +29,8 @@ struct PacketHeader {
 
 struct PeerPacket {
     uint8_t type;
-    char address[32];
-    char port[4];
+    char address[33];
+    char port[5];
 };
 
 struct PeerListPacket {
@@ -40,10 +40,12 @@ struct PeerListPacket {
 
 #pragma pack(pop)
 
+std::vector<uint8_t> serialise_header_pkt(PacketHeader);
+std::vector<uint8_t> serialise_peer_pkts(std::vector<PeerPacket>);
+
 PacketHeader build_header_pkt(PacketType, uint32_t);
 PeerPacket build_peer_data_pkt(Peer);
-PeerListPacket build_peer_list_pkt(std::vector<PeerPacket>);
+std::vector<PeerPacket> build_peer_list_pkt(PeerList *);
 
-PeerList unpack_peer_list_pkt(const PeerListPacket *);
-PeerListPacket deserialise_peer_list_pkt(const std::byte *);
-PacketHeader deserialise_header_pkt(void *);
+PeerList deserialise_peer_pkts(const std::byte *, size_t);
+PacketHeader deserialise_header_pkt(const std::byte *);

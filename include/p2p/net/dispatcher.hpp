@@ -22,8 +22,10 @@ class Dispatcher {
     std::vector<std::jthread> m_workers;
 
     template <typename T>
-    int send_to_peer(Peer peer, PacketHeader header,
-                     std::optional<T> packet_body = std::nullopt) {
+    int send_to_peer(
+        Peer peer, std::vector<uint8_t> header,
+        std::optional<std::vector<uint8_t>> packet_body = std::nullopt) {
+
         int sockfd, numbytes;
         std::string buf;
         ::addrinfo hints;
@@ -80,8 +82,7 @@ class Dispatcher {
 
         std::cout << "client: connected to " << s << "\n";
 
-        numbytes = ::send(ssockfd->get(), static_cast<void *>(&header),
-                          sizeof header, 0);
+        numbytes = ::send(ssockfd->get(), header.data(), header.size(), 0);
 
         std::cout << "client: sent " << numbytes << " bytes over the wire!\n";
 
@@ -93,15 +94,17 @@ class Dispatcher {
             return 0;
         }
 
-        numbytes = ::send(ssockfd->get(), static_cast<void *>(&packet_body),
-                          sizeof packet_body, 0);
+        numbytes =
+            ::send(ssockfd->get(), packet_body->data(), packet_body->size(), 0);
         if (numbytes == -1) {
             throw std::runtime_error("bad send");
         }
+        std::cout << "Sent another " << numbytes << " over the cable\n";
+        getchar();
         return 0;
     }
 
   public:
     int request_peers(Peer);
-    int provide_peers(Peer, PeerList);
+    int send_peers(Peer, PeerList *);
 };

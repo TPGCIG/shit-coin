@@ -19,46 +19,61 @@ void Listener::handle_client(ScopedSocket socket) {
     PacketHeader pkt_h{};
 
     bool header_incoming = true;
-    bool header_received = false;
 
-    std::byte tmp[1024];
-    int n = recv(socket.get(), tmp, sizeof tmp, 0);
-
-    recv_buffer.insert(recv_buffer.end(), tmp, tmp + n);
-
-    // Suck in recv information until we receive a full header, only expect a
-    // non-header if explicitly told to.
     while (true) {
+        std::byte tmp[1024];
+        int n = recv(socket.get(), tmp, sizeof tmp, 0);
 
-        if (n <= 0) {
-            std::cout << "listener: connection closed with socket "
-                      << socket.get() << "\n";
-            return;
-        }
+        recv_buffer.insert(recv_buffer.end(), tmp, tmp + n);
 
-        if (header_incoming) {
-            if (recv_buffer.size() >= sizeof(PacketHeader)) {
+        // Suck in recv information until we receive a full header, only expect
+        // a non-header if explicitly told to.
+        while (true) {
+            if (n <= 0) {
+                std::cout << "listener: connection closed with socket "
+                          << socket.get() << "\n";
+                return;
+            }
+
+            if (recv_buffer.empty()) {
+                break;
+            }
+
+            if (header_incoming) {
+                if (recv_buffer.size() < sizeof(PacketHeader)) {
+                    break;
+                }
                 pkt_h = deserialise_header_pkt(recv_buffer.data());
-                header_received = true;
                 std::cout << "header received with: \n"
                           << "    | type = "
                           << static_cast<int>(pkt_h.packet_type) << "\n"
                           << "    | len  = " << pkt_h.length << "\n";
-            }
+                header_incoming =
+                    is_bodyless(static_cast<PacketType>(pkt_h.packet_type));
 
-            break;
+                recv_buffer.erase(recv_buffer.begin(),
+                                  recv_buffer.begin() + sizeof(PacketHeader));
 
-        } else { // if we receive a body packet
+                continue;
+
+            } // if we receive a body packet
+
+            std::cout << "body! with size " << recv_buffer.size() << "\n";
             if (!(recv_buffer.size() >= pkt_h.length)) {
                 break;
             }
 
             switch (static_cast<PacketType>(pkt_h.packet_type)) {
-            case PacketType::PeerList: {
-                PeerListPacket plp =
-                    deserialise_peer_list_pkt(recv_buffer.data());
-                std::cout << "Received peerlistpacket with count: "
-                          << plp.peer_count << "\n";
+            case PacketType::PeerPacket: {
+                if (recv_buffer.size() < sizeof(PeerPacket)) {
+                    break;
+                }
+
+                PeerList pl =
+                    deserialise_peer_pkts(recv_buffer.data(), pkt_h.length);
+                std::cout << "plp received with: \n"
+                          << "    | peernum = "
+                          << static_cast<int>(pl.get_peers().size()) << "\n";
                 break;
             }
             default:
@@ -68,14 +83,12 @@ void Listener::handle_client(ScopedSocket socket) {
             }
 
             header_incoming = true;
+            recv_buffer.erase(recv_buffer.begin(),
+                              recv_buffer.begin() + pkt_h.length);
         }
     }
 
-    if (header_received) {
-        header_incoming =
-            is_bodyless(static_cast<PacketType>(pkt_h.packet_type));
-        header_received = false;
-    }
+    std::cout << "we are closed\n";
 };
 
 void Listener::start_listening() {

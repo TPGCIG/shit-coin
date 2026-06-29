@@ -17,17 +17,19 @@ int Dispatcher::request_peers(Peer peer) {
     /* Requests peers from a provided peer */
 
     // create the request Packet'
-    auto header = build_header_pkt(PacketType::RequestPeerList, 0);
+    auto hdr = build_header_pkt(PacketType::RequestPeerList, 0);
+    auto hdr_buf = serialise_header_pkt(hdr);
 
     // send it
-    return this->send_to_peer<PacketHeader>(peer, header);
+    return this->send_to_peer<PacketHeader>(peer, hdr_buf);
 }
 
-int Dispatcher::provide_peers(Peer peer, PeerList peer_list) {
-    (void)peer;
-    (void)peer_list;
-    // Packet pkt{};
+int Dispatcher::send_peers(Peer peer, PeerList *peer_list) {
+    auto plp = build_peer_list_pkt(peer_list);
+    auto plp_buf = serialise_peer_pkts(plp);
 
-    // pkt.type = PacketType::PeerList;
-    return 0;
+    auto hdr = build_header_pkt(PacketType::PeerPacket, plp_buf.size());
+    auto hdr_buf = serialise_header_pkt(hdr);
+
+    return this->send_to_peer<PeerListPacket>(peer, hdr_buf, plp_buf);
 }
