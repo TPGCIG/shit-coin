@@ -3,10 +3,11 @@
 #include "peers.hpp"
 
 #include <cstdint>
+#include <functional>
 
 enum class PacketType {
+    Nothing,
     RequestPeerList,
-
     PeerPacket,
 };
 
@@ -47,5 +48,20 @@ PacketHeader build_header_pkt(PacketType, uint32_t);
 PeerPacket build_peer_data_pkt(Peer);
 std::vector<PeerPacket> build_peer_list_pkt(PeerList *);
 
-PeerList deserialise_peer_pkts(const std::byte *, size_t);
 PacketHeader deserialise_header_pkt(const std::byte *);
+
+class PacketController {
+  public:
+    using SubmitPeer = std::function<void(int, std::string, std::string)>;
+    PacketController(SubmitPeer submit_peer) : submit_peer(submit_peer) {};
+
+    size_t parse_header(const std::byte *);
+    void parse_body(const std::byte *, size_t len);
+
+  private:
+    PacketType m_pkt_type{PacketType::Nothing};
+
+    SubmitPeer submit_peer;
+
+    void parse_peer_pkts(const std::byte *, size_t);
+};

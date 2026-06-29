@@ -5,9 +5,8 @@
 
 std::vector<Peer> PeerList::get_peers() { return m_peers; }
 
-int PeerList::add_peer(AddressType type, std::string address,
-                       std::string port) noexcept {
-    m_peers.emplace_back(type, address, port);
+int PeerList::add_peer(Peer peer) noexcept {
+    m_peers.push_back(peer);
     return m_peers.size();
 };
 

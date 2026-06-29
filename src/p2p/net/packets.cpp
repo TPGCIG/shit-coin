@@ -2,6 +2,7 @@
 
 #include <arpa/inet.h>
 #include <cstring>
+#include <iostream>
 
 std::vector<uint8_t> serialise_header_pkt(PacketHeader header) {
     std::vector<uint8_t> buffer;
@@ -54,33 +55,28 @@ std::vector<PeerPacket> build_peer_list_pkt(PeerList *peers) {
     return peer_packets;
 }
 
-PeerList deserialise_peer_pkts(const std::byte *buf, size_t buf_length) {
+void PacketController::parse_peer_pkts(const std::byte *buf,
+                                       size_t buf_length) {
     size_t offset{};
-    PeerList peers;
-
     size_t peer_count{buf_length / sizeof(PeerPacket)};
 
     for (size_t i{}; i < peer_count; ++i) {
-        PeerPacket pp{};
+        int type{};
+        char addr[33];
+        char port[5];
 
-        std::memcpy(&pp.type, buf + offset, sizeof(pp.type));
+        std::memcpy(&type, buf + offset, sizeof(type));
+        offset += sizeof(type);
 
-        offset += sizeof(pp.type);
+        std::memcpy(&addr, buf + offset, sizeof(addr));
+        offset += sizeof(addr);
 
-        std::memcpy(&pp.address, buf + offset, sizeof(pp.address));
+        std::memcpy(&port, buf + offset, sizeof(port));
+        offset += sizeof(port);
 
-        offset += sizeof(pp.address);
-
-        std::memcpy(&pp.port, buf + offset, sizeof(pp.port));
-
-        offset += sizeof(pp.port);
-
-        peers.add_peer(static_cast<AddressType>(pp.type),
-                       static_cast<std::string>(pp.address),
-                       static_cast<std::string>(pp.port));
+        this->submit_peer(type, static_cast<std::string>(addr),
+                          static_cast<std::string>(port));
     }
-
-    return peers;
 }
 
 PacketHeader deserialise_header_pkt(const std::byte *buf) {
@@ -92,4 +88,23 @@ PacketHeader deserialise_header_pkt(const std::byte *buf) {
     h.length = ntohl(h.length);
 
     return h;
+}
+
+size_t PacketController::parse_header(const std::byte *buf) {
+    PacketHeader hdr{deserialise_header_pkt(buf)};
+    this->m_pkt_type = static_cast<PacketType>(
+        hdr.packet_type); // incoming packet state is held
+    return hdr.length;
+}
+
+void PacketController::parse_body(const std::byte *buf, size_t buf_len) {
+    switch (this->m_pkt_type) {
+    case PacketType::PeerPacket: {
+        this->parse_peer_pkts(buf, buf_len);
+        break;
+    }
+    default:
+        std::cerr << "listener: catastrophic error - packet type\n";
+        return;
+    }
 }

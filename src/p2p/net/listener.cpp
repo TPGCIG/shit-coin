@@ -1,5 +1,4 @@
 #include "p2p/net/listener.hpp"
-#include "p2p/net/dispatcher.hpp"
 #include "p2p/net/packets.hpp"
 #include "p2p/net/scopedsocket.hpp"
 
@@ -16,9 +15,7 @@
 
 void Listener::handle_client(ScopedSocket socket) {
     std::vector<std::byte> recv_buffer;
-    PacketHeader pkt_h{};
-
-    bool header_incoming = true;
+    size_t body_len{};
 
     while (true) {
         std::byte tmp[1024];
@@ -39,10 +36,17 @@ void Listener::handle_client(ScopedSocket socket) {
                 break;
             }
 
-            if (header_incoming) {
+            if (body_len == 0) { // no body coming == this is a header
                 if (recv_buffer.size() < sizeof(PacketHeader)) {
                     break;
                 }
+
+                // we will receive 0 if no body is coming, some value
+                // representing the future body o/w
+                body_len = this->parse_header(recv_buffer.data());
+
+                /*
+
                 pkt_h = deserialise_header_pkt(recv_buffer.data());
                 std::cout << "header received with: \n"
                           << "    | type = "
@@ -54,14 +58,19 @@ void Listener::handle_client(ScopedSocket socket) {
                 recv_buffer.erase(recv_buffer.begin(),
                                   recv_buffer.begin() + sizeof(PacketHeader));
 
+                */
                 continue;
 
             } // if we receive a body packet
 
             std::cout << "body! with size " << recv_buffer.size() << "\n";
-            if (!(recv_buffer.size() >= pkt_h.length)) {
+            if (!(recv_buffer.size() >= body_len)) {
                 break;
             }
+
+            this->parse_body(recv_buffer.data(), body_len);
+
+            /*
 
             switch (static_cast<PacketType>(pkt_h.packet_type)) {
             case PacketType::PeerPacket: {
@@ -69,8 +78,7 @@ void Listener::handle_client(ScopedSocket socket) {
                     break;
                 }
 
-                PeerList pl =
-                    deserialise_peer_pkts(recv_buffer.data(), pkt_h.length);
+                deserialise_peer_pkts(recv_buffer.data(), pkt_h.length);
                 std::cout << "plp received with: \n"
                           << "    | peernum = "
                           << static_cast<int>(pl.get_peers().size()) << "\n";
@@ -83,8 +91,11 @@ void Listener::handle_client(ScopedSocket socket) {
             }
 
             header_incoming = true;
+            */
+
             recv_buffer.erase(recv_buffer.begin(),
-                              recv_buffer.begin() + pkt_h.length);
+                              recv_buffer.begin() + body_len);
+            body_len = 0;
         }
     }
 

@@ -18,7 +18,7 @@ class PeerList {
     std::vector<Peer> m_peers;
 
   public:
-    int add_peer(AddressType, std::string, std::string) noexcept;
+    int add_peer(Peer) noexcept;
     int retrieve_central_peers();
     std::vector<Peer> get_peers();
 };
