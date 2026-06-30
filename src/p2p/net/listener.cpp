@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 #include <cerrno>
 #include <cstring>
+#include <future>
 #include <iostream>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -45,53 +46,18 @@ void Listener::handle_client(ScopedSocket socket) {
                 // representing the future body o/w
                 body_len = this->parse_header(recv_buffer.data());
 
-                /*
-
-                pkt_h = deserialise_header_pkt(recv_buffer.data());
-                std::cout << "header received with: \n"
-                          << "    | type = "
-                          << static_cast<int>(pkt_h.packet_type) << "\n"
-                          << "    | len  = " << pkt_h.length << "\n";
-                header_incoming =
-                    is_bodyless(static_cast<PacketType>(pkt_h.packet_type));
-
                 recv_buffer.erase(recv_buffer.begin(),
                                   recv_buffer.begin() + sizeof(PacketHeader));
 
-                */
                 continue;
 
             } // if we receive a body packet
 
-            std::cout << "body! with size " << recv_buffer.size() << "\n";
             if (!(recv_buffer.size() >= body_len)) {
                 break;
             }
 
             this->parse_body(recv_buffer.data(), body_len);
-
-            /*
-
-            switch (static_cast<PacketType>(pkt_h.packet_type)) {
-            case PacketType::PeerPacket: {
-                if (recv_buffer.size() < sizeof(PeerPacket)) {
-                    break;
-                }
-
-                deserialise_peer_pkts(recv_buffer.data(), pkt_h.length);
-                std::cout << "plp received with: \n"
-                          << "    | peernum = "
-                          << static_cast<int>(pl.get_peers().size()) << "\n";
-                break;
-            }
-            default:
-                std::cerr << "listener: catastrophic error - packet type: "
-                          << static_cast<int>(pkt_h.packet_type) << "\n";
-                return;
-            }
-
-            header_incoming = true;
-            */
 
             recv_buffer.erase(recv_buffer.begin(),
                               recv_buffer.begin() + body_len);
@@ -102,7 +68,8 @@ void Listener::handle_client(ScopedSocket socket) {
     std::cout << "we are closed\n";
 };
 
-void Listener::start_listening() {
+void Listener::start_listening(std::string addr, std::string port,
+                               std::promise<void> init_promise) {
     ::addrinfo hints;
     ::addrinfo *p;
 
@@ -118,7 +85,7 @@ void Listener::start_listening() {
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
 
-    if (::getaddrinfo("localhost", INPUT_PORT, &hints, &raw_servinfo) != 0) {
+    if (::getaddrinfo(addr.data(), port.data(), &hints, &raw_servinfo) != 0) {
         throw std::runtime_error("GAI failed");
     }
 
@@ -155,7 +122,9 @@ void Listener::start_listening() {
         throw std::runtime_error("listenn failed");
     }
 
-    std::cout << "listening for connection" << std::endl;
+    std::cout << "listening on " << ssockfd->get() << std::endl;
+
+    init_promise.set_value();
 
     while (true) {
         struct sockaddr_storage their_addr;

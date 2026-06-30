@@ -1,1 +1,67 @@
 #include "p2p/net/node.hpp"
+#include "p2p/net/NetworkTypes.hpp"
+
+#include "csv.h"
+
+#include <chrono>
+#include <iostream>
+
+int PeerList::retrieve_central_peers() {
+    std::cout << "retrieving central peers...\n";
+
+    io::CSVReader<2> master_peers("src/p2p/peers/master_clients.csv");
+    master_peers.read_header(io::ignore_extra_column, "address", "port");
+
+    std::string address, port;
+    auto type = AddressType::IPv4;
+    while (master_peers.read_row(address, port)) {
+        m_peers.emplace_back(type, address, port);
+    }
+
+    return m_peers.size();
+};
+
+std::vector<Peer> PeerList::get_peers() { return m_peers; }
+
+int PeerList::add_peer(Peer peer) noexcept {
+    m_peers.push_back(peer);
+    return m_peers.size();
+};
+
+void Node::send_peers(Peer peer) {
+    proto_engine.send_peers(peer, peers.get_peers());
+}
+
+Node::Node(std::string addr, std::string port)
+    : proto_engine(
+          addr, port, [this](Peer peer) { this->peers.add_peer(peer); },
+          [this](Peer peer) { this->send_peers(peer); }) {
+
+    int peer_count{this->peers.retrieve_central_peers()};
+    std::cout << "received " << peer_count << " peers locally\n";
+
+    std::cout << "requesting peers from: \n";
+    for (auto peer : peers.get_peers()) {
+        // not us
+        if (strcmp(peer.port.data(), port.data()) == 0)
+            continue;
+
+        std::cout << "    | address: " << peer.address << "\n"
+                  << "    | port: " << peer.port << "\n\n";
+        proto_engine.request_peers(peer);
+    }
+
+    for (int i{}; i < 5; ++i) {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::cout << '.';
+        std::flush(std::cout);
+    }
+    std::cout << "\n";
+
+    std::cout << "received " << this->peers.get_peers().size() << " peers from "
+              << peer_count << " peers\n";
+
+    for (Peer peer : peers.get_peers()) {
+        std::cout << peer.address << " " << peer.port << "\n";
+    }
+};

@@ -1,10 +1,28 @@
 #pragma once
 
-#include "dispatcher.hpp"
-#include "listener.hpp"
-#include "peers.hpp"
+#include "NetworkTypes.hpp"
+#include "packets.hpp"
+
+#include <fstream>
+
+class PeerList {
+  private:
+    std::filebuf m_clientFD;
+    std::vector<Peer> m_peers;
+
+  public:
+    int add_peer(Peer) noexcept;
+    int retrieve_central_peers();
+    std::vector<Peer> get_peers();
+};
 
 class Node {
+  private:
+    PeerList peers{};
+    ProtocolEngine proto_engine;
+
+    void send_peers(Peer);
+
   public:
     // this might be a bit excessive but im no OOP expert so ive converged
     // on a pattern where listener does its own thing and just sends information
@@ -17,28 +35,14 @@ class Node {
     // its components rather than a peer struct but i think this is idiomatic?
     //
     // can refactor through hand-defining functions but cant be fucked.
-    Node()
-        : listener(
-              // parse_header lambda - for parsing header packets in the ctrl.
-              [this](const std::byte *buf) {
-                  return this->packet_ctrl.parse_header(buf);
-              },
-              // parse_body lambda - for parsing body packets given a specific
-              // state. we save the state that the header tells us, not too
-              // race-y since this is TCP and bound to one listener.
-              [this](const std::byte *buf, size_t len) {
-                  this->packet_ctrl.parse_body(buf, len);
-              }),
-          // for packet_ctrl to submit peers - this one is pretty intuitive i
-          // guess.
-          packet_ctrl([this](int type, std::string addr, std::string port) {
-              Peer peer{static_cast<AddressType>(type), addr, port};
-              peers.add_peer(peer);
-          }) {};
+    //
+    // look at .cpp definitions
+    Node(std::string, std::string);
 
-  private:
-    PeerList peers{};
-    Listener listener;
-    Dispatcher dispatcher{};
-    PacketController packet_ctrl;
+    // ============= this is for debugging ====================
+
+    void d_add_peer(AddressType t, std::string a, std::string p) {
+        Peer peer{t, a, p};
+        this->peers.add_peer(peer);
+    };
 };

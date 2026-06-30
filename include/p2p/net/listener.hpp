@@ -3,6 +3,7 @@
 #include "p2p/net/scopedsocket.hpp"
 
 #include <functional>
+#include <future>
 #include <netdb.h>
 #include <thread>
 #include <vector>
@@ -16,6 +17,9 @@ class Listener {
     using HeaderParser = std::function<size_t(const std::byte *)>;
     using BodyParser = std::function<void(const std::byte *, size_t)>;
 
+    std::string addr;
+    std::string port;
+
     HeaderParser parse_header;
     BodyParser parse_body;
 
@@ -23,8 +27,10 @@ class Listener {
     void handle_client(ScopedSocket);
 
   public:
-    void start_listening();
+    void start_listening(std::string, std::string, std::promise<void>);
 
-    Listener(HeaderParser parse_header, BodyParser parse_body)
-        : parse_header(parse_header), parse_body(parse_body) {};
+    Listener(std::string addr, std::string port, HeaderParser parse_header,
+             BodyParser parse_body)
+        : addr(addr), port(port), parse_header(parse_header),
+          parse_body(parse_body) {};
 };

@@ -1,7 +1,4 @@
-#include "p2p/net/dispatcher.hpp"
-#include "p2p/net/listener.hpp"
-#include "p2p/net/packets.hpp"
-#include "p2p/net/peers.hpp"
+#include "p2p/net/node.hpp"
 
 #define LH_A "localhost"
 #define LH_P "9876"
@@ -16,24 +13,21 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <iostream>
+
 int main(int argc, char *argv[]) {
     (void)argc;
-    (void)argv;
-
-    Dispatcher dp;
-    Listener ls;
 
     Peer pr{AddressType::IPv4, LH_A, LH_P};
     Peer pr2{AddressType::IPv6, "hongkong", "1111"};
     PeerList pl;
-    pl.add_peer(AddressType::IPv4, LH_A, LH_P);
-    pl.add_peer(AddressType::IPv6, "hongkkong", "1111");
-    pl.add_peer(AddressType::IPv6, "china", "1211");
-    if (strcmp(argv[1], "l") == 0) {
-        ls.start_listening();
-    } else {
-        dp.request_peers(pr);
-    }
 
+    Node node("localhost", argv[1]);
+    if (!(strcmp(argv[2], "d"))) {
+        node.d_add_peer(AddressType::IPv6, "hongkong", "1111");
+        node.d_add_peer(AddressType::IPv6, "china", "6969");
+        node.d_add_peer(AddressType::IPv6, "ninja", "4200");
+    }
+    getchar();
     return 0;
 }
