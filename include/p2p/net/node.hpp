@@ -4,6 +4,7 @@
 #include "packets.hpp"
 
 #include <fstream>
+#include <iostream>
 
 class PeerList {
   private:
@@ -13,7 +14,7 @@ class PeerList {
   public:
     int add_peer(Peer) noexcept;
     int retrieve_central_peers();
-    std::vector<Peer> get_peers();
+    const std::vector<Peer> &get_peers() const;
 };
 
 class Node {

@@ -18,16 +18,8 @@
 int main(int argc, char *argv[]) {
     (void)argc;
 
-    Peer pr{AddressType::IPv4, LH_A, LH_P};
-    Peer pr2{AddressType::IPv6, "hongkong", "1111"};
-    PeerList pl;
-
     Node node("localhost", argv[1]);
-    if (!(strcmp(argv[2], "d"))) {
-        node.d_add_peer(AddressType::IPv6, "hongkong", "1111");
-        node.d_add_peer(AddressType::IPv6, "china", "6969");
-        node.d_add_peer(AddressType::IPv6, "ninja", "4200");
-    }
+
     getchar();
     return 0;
 }

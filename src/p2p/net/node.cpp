@@ -21,10 +21,14 @@ int PeerList::retrieve_central_peers() {
     return m_peers.size();
 };
 
-std::vector<Peer> PeerList::get_peers() { return m_peers; }
+const std::vector<Peer> &PeerList::get_peers() const { return m_peers; }
 
 int PeerList::add_peer(Peer peer) noexcept {
-    m_peers.push_back(peer);
+    auto it = std::find(this->m_peers.begin(), this->m_peers.end(), peer);
+
+    if (it == this->get_peers().end()) {
+        m_peers.push_back(peer);
+    }
     return m_peers.size();
 };
 
@@ -39,6 +43,14 @@ Node::Node(std::string addr, std::string port)
 
     int peer_count{this->peers.retrieve_central_peers()};
     std::cout << "received " << peer_count << " peers locally\n";
+    if (!strcmp(port.data(), "9876")) {
+        this->d_add_peer(AddressType::IPv6, std::string("hongkong"),
+                         std::string("1111"));
+        this->d_add_peer(AddressType::IPv6, std::string("china"),
+                         std::string("2222"));
+        this->d_add_peer(AddressType::IPv6, std::string("boomboom"),
+                         std::string("3333"));
+    }
 
     std::cout << "requesting peers from: \n";
     for (auto peer : peers.get_peers()) {
@@ -64,4 +76,6 @@ Node::Node(std::string addr, std::string port)
     for (Peer peer : peers.get_peers()) {
         std::cout << peer.address << " " << peer.port << "\n";
     }
+
+    std::cout << "done printing peers\n";
 };

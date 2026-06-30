@@ -8,4 +8,6 @@ struct Peer {
     AddressType type;
     std::string address;
     std::string port;
+
+    bool operator==(const Peer &) const = default;
 };
