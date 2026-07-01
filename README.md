@@ -26,9 +26,10 @@ the client's virtual machine is built to judge the legitimacy of contracts on th
 
 <h2>Packet Images</h2>
 Peer Packet
-![Peer packet](assets/images/peer_pkt.png)
+<img width="1299" height="757" alt="peer_pkt" src="https://github.com/user-attachments/assets/3808e18b-853e-4def-90a3-25dc7b356600" />
+
 Header Packet:
-![Header packet](assets/images/header_pkt.png)
+<img width="1297" height="858" alt="header_pkt" src="https://github.com/user-attachments/assets/1fe10148-fefc-441c-a0d9-23115bb1159b" />
 
 the top 0-7 represents byte fields, the rows represent the "next" component of the packet, kinda
 like a book. The padding sucks and isnt really clean which can hinder performance, this will be fixed,
