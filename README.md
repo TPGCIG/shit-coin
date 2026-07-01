@@ -24,6 +24,19 @@ the packet dispatch is mutually exclusive from the listener so every piece of tr
 
 the client's virtual machine is built to judge the legitimacy of contracts on the network (it doesnt really matter where it originates from - if it is signed by both parties and legitimate, all bets are off). contracts are checked for legitimacy over the entire network and illegitimate ones will be unilaterally rejected and are thus pointless to make. the client will only be built to send legitimate contracts only based on the state of the network.
 
+<h2>Packet Images</h2>
+Peer Packet
+![Peer packet](assets/images/peer_pkt.png)
+Header Packet:
+![Header packet](assets/images/header_pkt.png)
+
+the top 0-7 represents byte fields, the rows represent the "next" component of the packet, kinda
+like a book. The padding sucks and isnt really clean which can hinder performance, this will be fixed,
+but currently more conscious of moving forward (spent days refactoring the system and needed to draw the line 
+somewhere)
+
+headers are sent over the wire in a stream prepending the message. header + body sent as one buffer
+and all headers are signed with a "return address" such that requests can be fulfilled.
 
 <br/>
 
