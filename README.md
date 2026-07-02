@@ -4,7 +4,7 @@ okay
 
 c++20 and g++
 
-built for learning computer networking. resources I used:
+built for learning computer networking. socket programming linux project with handmade net protocol and p2p client. resources I used:
 - Beej's guide to network programming
 - learncpp.com
 - tcp/ip illustrated vol 1.
