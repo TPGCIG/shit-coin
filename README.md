@@ -9,7 +9,9 @@ built for learning computer networking. socket programming linux project with ha
 - learncpp.com
 - tcp/ip illustrated vol 1.
 
-no llms used for writing code (no surprise to anyone if you skim through the code). only for asking questions / requesting generalised examples.
+> this is a personal project made for fun to learn C++ and computer networking and to see how far I can get in a language/concept that is new to me, and is not for legitimate use as any tender/currency. if you decide to install and use this project, be aware that it was not designed by a security expert.
+
+no LLMs were used for writing code (no surprise to anyone if you skim through it). only for asking questions / requesting generalised examples.
 
 now, onto the serious things:
 
