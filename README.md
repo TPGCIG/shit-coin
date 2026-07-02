@@ -1,4 +1,6 @@
-the moon is a lie.
+"go make some money"
+
+okay
 
 c++20 and g++
 
